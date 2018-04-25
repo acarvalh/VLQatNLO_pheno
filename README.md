@@ -1,28 +1,28 @@
 # VLQatNLO_pheno
 
-You need to install https://github.com/delphes \n
+You need to install https://github.com/delphes <br />
 (+ root + matplotlib)
 
-Example of analysis running: \n
+Example of analysis running: <br />
 
-source  /afs/cern.ch/sw/lcg/external/gcc/4.9.3/x86_64-slc6/setup.sh \n
-source /afs/cern.ch/sw/lcg/app/releases/ROOT/6.06.00/x86_64-slc6-gcc49-opt/root/bin/thisroot.sh \n
-(or: load your local enviroment for root and python) \n
+source  /afs/cern.ch/sw/lcg/external/gcc/4.9.3/x86_64-slc6/setup.sh <br />
+source /afs/cern.ch/sw/lcg/app/releases/ROOT/6.06.00/x86_64-slc6-gcc49-opt/root/bin/thisroot.sh <br />
+(or: load your local enviroment for root and python) <br />
 
-cd $my_repo/VLQatNLO_pheno \n
-./do_links.sh # check the path relative to delphes == run only once \n
+cd $my_repo/VLQatNLO_pheno <br />
+./do_links.sh # check the path relative to delphes == run only once <br />
 
-\n
-########
-Example of processing a hepmc sample \n
+<br />
+######## <br />
+Example of processing a hepmc sample <br />
 
 
-cd $my_repo/Delphes \n
-source  /afs/cern.ch/sw/lcg/external/gcc/4.9.3/x86_64-slc6/setup.sh \n
-source /afs/cern.ch/sw/lcg/app/releases/ROOT/6.06.00/x86_64-slc6-gcc49-opt/root/bin/thisroot.sh \n
-(or: load your local enviroment for root and python) \n
+cd $my_repo/Delphes <br />
+source  /afs/cern.ch/sw/lcg/external/gcc/4.9.3/x86_64-slc6/setup.sh <br />
+source /afs/cern.ch/sw/lcg/app/releases/ROOT/6.06.00/x86_64-slc6-gcc49-opt/root/bin/thisroot.sh <br />
+(or: load your local enviroment for root and python) <br />
 
-cp $my_repo/VLQatNLO_pheno/gen_card.tcl cards \n
-gunzip sample.hepmc.gz  \n
-./DelphesHepMC cards/gen_card.tcl sample.root  sample.hepmc  \n
-gzip sample.hepmc  \n
+cp $my_repo/VLQatNLO_pheno/gen_card.tcl cards <br />
+gunzip sample.hepmc.gz  <br />
+./DelphesHepMC cards/gen_card.tcl sample.root  sample.hepmc  <br />
+gzip sample.hepmc  <br />
