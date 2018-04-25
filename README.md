@@ -11,6 +11,8 @@ source /afs/cern.ch/sw/lcg/app/releases/ROOT/6.06.00/x86_64-slc6-gcc49-opt/root/
 
 cd $my_repo/VLQatNLO_pheno <br />
 ./do_links.sh # check the path relative to delphes == run only once <br />
+./analysis_gen.py sample.root 1500 <br />
+==> the path for the sample is taken relativelly to the EOS path from the samples in cernbox == if you are doing this locally take care of the path defined to sample.root on analysis_gen.py
 
 <br />
 ######## <br />
