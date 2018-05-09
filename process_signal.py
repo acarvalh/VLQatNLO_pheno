@@ -12,7 +12,7 @@ def run_cmd(command):
 
 part1 ='./DelphesHepMC cards/gen_card.tcl '
 
-files = procP1=glob.glob('/eos/user/a/acarvalh/VLQNLO/T_W_W*.hepmc.gz')
+files = procP1=glob.glob('/eos/user/a/acarvalh/VLQNLO_files/T_W_W*.hepmc.gz')
 
 print  len(files)
 #print part1+str(1)+part2+files[1]

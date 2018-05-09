@@ -33,7 +33,7 @@ inputFile = sys.argv[2]
 VLQmass = float(sys.argv[1])
 order = "LO"
 
-inputpath="/eos/user/a/acarvalh/VLQNLO/"
+inputpath="/eos/user/a/acarvalh/VLQNLO_files/"
 
 cx=1.0
 nev=1.0
@@ -70,6 +70,10 @@ nfilesHTparts = {
 toProcess = [str(inputpath)+str(inputFile)]
 if ".root" not in inputFile :
     toProcess = glob.glob(inputpath+'/QCD_*.root')
+
+file = open('/eos/user/a/acarvalh/VLQNLO_files/samplesList.txt',"w")
+file.write(str(glob.glob(inputpath+'/*.root')))
+file.close()
 
 #########################
 # Cuts
@@ -113,7 +117,7 @@ sign = lambda a: 1 if a>0 else -1 if a<0 else 0
 #############################################################
 # Loop over file list
 #############################################################
-onlyCount = False
+onlyCount = True
 for sample in toProcess :
     #for i in range(0,1) :
     #sample = "/eos/user/a/acarvalh/VLQNLO/QCD_HT2000toInf_1.root"
@@ -132,21 +136,21 @@ for sample in toProcess :
         if dictionary in sample :
             nevHTparts[dictionary] = nevHTparts[dictionary]+numberOfEntries
             nfilesHTparts[dictionary] = nfilesHTparts[dictionary]+1
-    # Get pointers to branches used in this analysis
-    branchEvent = treeReader.UseBranch("Event")
-    branchJet = treeReader.UseBranch("GenJet")
-    branchFatJet = treeReader.UseBranch("GenJetAK8")
-    branchParticle = treeReader.UseBranch("Particle")
-    branchMET = treeReader.UseBranch("GenMissingET")
-    weight = 1
-    for dictionary in HTpartstoCX.keys() :
-        if dictionary in sample :
-            print dictionary
-            weight = float(HTpartstoCX[dictionary])
     #############################################################
     # Loop over all events
     #############################################################
     if not onlyCount :
+        # Get pointers to branches used in this analysis
+        branchEvent = treeReader.UseBranch("Event")
+        branchJet = treeReader.UseBranch("GenJet")
+        branchFatJet = treeReader.UseBranch("GenJetAK8")
+        branchParticle = treeReader.UseBranch("Particle")
+        branchMET = treeReader.UseBranch("GenMissingET")
+        weight = 1
+        for dictionary in HTpartstoCX.keys() :
+            if dictionary in sample :
+                print dictionary
+                weight = float(HTpartstoCX[dictionary])
         for entry in range(0, numberOfEntries): #
             # Load selected branches with data from specified event
             treeReader.ReadEntry(entry)

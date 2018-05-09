@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-doHT = 4 # 0-6
+doHT = 0 # 0-6
 
 import subprocess
 import glob
@@ -13,7 +13,7 @@ def run_cmd(command):
   return stdout
 
 HTparts = ["HT200to300", "HT300to500", "HT500to700", "HT700to1000", "HT1000to1500", "HT1500to2000","HT2000toInf"]
-part1 ='./DelphesCMSFWLite cards/gen_card.tcl /eos/user/a/acarvalh/VLQNLO/QCD_'+HTparts[doHT]+'_'
+part1 ='./DelphesCMSFWLite cards/gen_card.tcl /eos/user/a/acarvalh/VLQNLO_files/QCD_'+HTparts[doHT]+'_'
 part2 = '.root '
 
 files = glob.glob('/eos/cms/store/mc/RunIISpring18MiniAOD/QCD_'+HTparts[doHT]+'_TuneCP5_13TeV-madgraph-pythia8/MINIAODSIM/100X_upgrade2018_realistic_v10-v1/*000/*.root')
@@ -21,7 +21,12 @@ files = glob.glob('/eos/cms/store/mc/RunIISpring18MiniAOD/QCD_'+HTparts[doHT]+'_
 print  len(files)
 #print part1+str(1)+part2+files[1]
 
-for line in range(0, len(files)): run_cmd(part1+str(line)+part2+files[line])
+for line in range(0, len(files)):
+    outputlog = run_cmd(part1+str(line)+part2+files[line])
+    print "procssed "+str(line)+" of "+str(len(files))
+    file = open('/eos/user/a/acarvalh/VLQNLO_files/QCD_'+HTparts[doHT]+'_'str(line)+'.log',"w")
+    file.write(outputlog)
+    file.close()
 #    proc=subprocess.Popen([part1+str(line)+part2+files[line]], shell=True,stdout=subprocess.PIPE)
 #    out=proc.stdout.read()
 
