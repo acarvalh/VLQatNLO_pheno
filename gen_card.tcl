@@ -7,6 +7,7 @@ set ExecutionPath {
   GenJetFinder
   GenJetFinderAK8
   GenMissingET
+  GenScalarHT
   TreeWriter
 }
 
@@ -28,6 +29,16 @@ module PdgCodeFilter NeutrinoFilter {
   add PdgCode {-14}
   add PdgCode {-16}
 
+}
+
+##############
+## Scalar HT #
+##############
+
+module Merger GenScalarHT {
+ # add InputArray InputArray
+ add InputArray NeutrinoFilter/filteredParticles
+ set EnergyOutputArray energy
 }
 
 #####################
@@ -55,20 +66,26 @@ module FastJetFinder GenJetFinderAK8 {
   set JetAlgorithm 6
   set ParameterR 0.8
 
+  set ComputeNsubjettiness 1
+  set Beta 1.0
+  set AxisMode 4
+
+  set ComputeTrimming 1
+  set RTrim 0.2
+  set PtFracTrim 0.05
+
+  set ComputePruning 1
+  set ZcutPrun 0.1
+  set RcutPrun 0.5
+  set RPrun 0.8
+
+  set ComputeSoftDrop 1
+  set BetaSoftDrop 0.0
+  set SymmetryCutSoftDrop 0.1
+  set R0SoftDrop 0.8
+
   set JetPTMin 200.0
 }
-
-#########################
-# Gen Missing ET merger
-########################
-
-module Merger GenMissingET {
-
-# add InputArray InputArray
-  add InputArray NeutrinoFilter/filteredParticles
-  set MomentumOutputArray momentum
-}
-
 
 #########################
 # Gen Missing ET merger
@@ -104,6 +121,7 @@ module TreeWriter TreeWriter {
   #add Branch GenParticleFilter/filteredParticles Particle GenParticle
 
   add Branch GenJetFinder/jets GenJet Jet
-  add Branch GenJetFinderAK8/jetsAK8 GenJetAK8 FatJet
+  add Branch GenJetFinderAK8/jetsAK8 GenJetAK8 Jet
   add Branch GenMissingET/momentum GenMissingET MissingET
+  add Branch GenScalarHT/energy GenHT ScalarHT
 }

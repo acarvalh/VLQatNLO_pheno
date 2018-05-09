@@ -14,15 +14,13 @@ import matplotlib.pyplot as plt
 ROOT.gInterpreter.Declare('#include "external/ExRootAnalysis/ExRootTreeReader.h"')
 ROOT.gInterpreter.Declare('#include "DelphesClasses.h"')
 # fastjet headers - to make prunned mass
-#ROOT.gInterpreter.Declare('#include "external/fastjet/PseudoJet.hh"')
-#ROOT.gInterpreter.Declare('#include "external/fastjet/ClusterSequence.hh"')
-#ROOT.gInterpreter.Declare('#include "external/fastjet/tools/Filter.hh"')
-#ROOT.gInterpreter.Declare('#include "external/fastjet/Selector.hh"')
-#ROOT.gInterpreter.Declare('#include "external/fastjet/tools/Pruner.hh"')
-#ROOT.gInterpreter.Declare('#include "external/fastjet/tools/MassDropTagger.hh"')
+#ROOT.gInterpreter.Declare('#include "fastjet/PseudoJet.hh"')
+#ROOT.gInterpreter.Declare('#include "fastjet/ClusterSequence.hh"')
+#ROOT.gInterpreter.Declare('#include "fastjet/tools/Filter.hh"')
+#ROOT.gInterpreter.Declare('#include "fastjet/Selector.hh"')
+#ROOT.gInterpreter.Declare('#include "fastjet/tools/Pruner.hh"')
+#ROOT.gInterpreter.Declare('#include "fastjet/tools/MassDropTagger.hh"')
 #ROOT.gInterpreter.Declare('using namespace fastjet;')
-#http://spartyjet.hepforge.org/
-#from spartyjet import *
 
 ROOT.gSystem.Load("libDelphes")
 
@@ -53,15 +51,18 @@ nFatJets = []
 nBs = []
 nJets = []
 nBsFat = []
+Tau21 = []
+PrunMass = []
+leadSD_subjet_pt = []
 
-def isbtagged(jets, GenBJet) :
+def isbtagged(jets, GenB) :
     see=0
     #for j in range(0, jets.Particles.GetEntriesFast()) :
     #    #print "constituents flavour " + str(jets.Particles[j].PID)
     #    if(abs(jets.Particles[j].PID) == 5) :
     #        if(jets.Particles[j].PT > bjetpt and jets.Particles[j].Eta < etab) :
     #            see = see + 1
-    for bjets in GenBJet :
+    for bjets in GenB :
         if bjets.DeltaR(jets) < 0.3 : see = see + 1
     if see > 0 : return see
     else : return 0
@@ -80,6 +81,7 @@ branchEvent = treeReader.UseBranch("Event")
 branchJet = treeReader.UseBranch("GenJet")
 branchFatJet = treeReader.UseBranch("GenJetAK8")
 branchParticle = treeReader.UseBranch("Particle")
+branchMET = treeReader.UseBranch("GenMissingET")
 #############################################################
 # Declare histograms
 #############################################################
@@ -87,7 +89,7 @@ branchParticle = treeReader.UseBranch("Particle")
 #############################################################
 # Loop over all events
 #############################################################
-for entry in range(0, numberOfEntries):
+for entry in range(0, numberOfEntries): # 
     # Load selected branches with data from specified event
     treeReader.ReadEntry(entry)
     weight = 1 #branchEvent.At(0).Weight
@@ -101,7 +103,7 @@ for entry in range(0, numberOfEntries):
     #####################
     Ws = []
     Topone = []
-    GenBJets = []
+    GenBs = []
     QQ = True
     #print branchParticle.GetEntries()
     for part in range(0, branchParticle.GetEntries()):
@@ -128,11 +130,11 @@ for entry in range(0, numberOfEntries):
        if (IsPU == 0 and (abs(pdgCode) == 5) and abs(branchParticle.At(genparticle.M1).PID )> 6000000):
           dumb = ROOT.TLorentzVector()
           dumb.SetPtEtaPhiM(genparticle.PT,genparticle.Eta,genparticle.Phi,genparticle.Mass)
-          GenBJets.append(dumb)
+          GenBs.append(dumb)
           #print "b mother: "+str(genparticle.M1)
           #mother =  branchParticle.At(genparticle.M1)
           #motherPID = mother.PID
-          print " pdgid "+ str(pdgCode)
+          #print " pdgid "+ str(pdgCode)
     # taking the gen-jets
     RecoFatJets = []
     RecoBFatJets = []
@@ -142,7 +144,24 @@ for entry in range(0, numberOfEntries):
            dumb = ROOT.TLorentzVector()
            dumb.SetPtEtaPhiM(jet.PT,jet.Eta,jet.Phi,jet.Mass)
            RecoFatJets.append(dumb)
-           RecoBFatJets.append(isbtagged(dumb, GenBJets))
+           RecoBFatJets.append(isbtagged(dumb, GenBs))
+           print (isbtagged(dumb, GenBs), jet.BTagAlgo , jet.NSubJetsPruned)
+           print (jet.Tau[1]/jet.Tau[0] , jet.SoftDroppedSubJet1.M())
+           if jet.Tau[0] > 0 : Tau21.append(jet.Tau[1]/jet.Tau[0])
+           #prumass = jet.SoftDroppedJet.M() # (jet.PrunedP4[1]+jet.PrunedP4[0]).M()
+           print (jet.SoftDroppedJet.M())
+           PrunMass.append(jet.SoftDroppedJet.M())
+           leadSD_subjet_pt.append(jet.SoftDroppedSubJet1.Pt())
+           # GenJetAK8.SoftDroppedP4[5]
+           # GenJetAK8.Tau[5]
+           # GenJetAK8.SoftDroppedJet
+           # GenJetAK8.SoftDroppedSubJet1 / GenJetAK8.SoftDroppedSubJet2 # TLorentzVec
+           # GenJetAK8.NSubJetsSoftDropped
+           # GenJetAK8.Particles
+           # GenJetAK8.PTD
+           # GenJetAK8.PrunedP4[5]
+           # GenJetAK8.NSubJetsPruned
+           # GenJetAK8.NSubJetsSoftDropped
     RecoJets = []
     RecoBJets = []
     for part in range(0, branchJet.GetEntries()): # add one more collection to the delphes card
@@ -151,8 +170,8 @@ for entry in range(0, numberOfEntries):
            dumb = ROOT.TLorentzVector()
            dumb.SetPtEtaPhiM(jet.PT,jet.Eta,jet.Phi,jet.Mass)
            RecoJets.append(dumb)
-           ## using the constituents to find out if there is a b-quark
-           RecoBJets.append(isbtagged(dumb, GenBJets))
+           ## using the DR with the genParticles to find out if there is a b-quark
+           RecoBJets.append(isbtagged(dumb, GenBs))
 
     print "size of FatJet collection " + str(len(RecoFatJets)) + " size of Jet collection " + str(len(RecoJets))
     print RecoBJets
@@ -160,7 +179,7 @@ for entry in range(0, numberOfEntries):
     for i in range(0, len(RecoBJets)) : numbb += RecoBJets[i];
     numfatbb = 0
     for i in range(0, len(RecoBFatJets)) : numfatbb += RecoBFatJets[i];
-    print " total "+str(numbb)
+    #print " total "+str(numbb)
     nFatJets.append(len(RecoFatJets))
     nJets.append(len(RecoJets))
     nBs.append(numbb)
@@ -177,6 +196,31 @@ plt.title(" jet collections" )
 plt.xlabel("Njets")
 plt.ylabel("normalized")
 plt.savefig("Njets.pdf")
+plt.clf
+############################
+plt.figure(figsize=(5,5))
+plt.hist(Tau21, bins=10, normed=1, histtype='bar',  fill=False, color= 'k', edgecolor='k', lw = 4)
+plt.legend(loc='upper right')
+plt.title(" jet collections" )
+plt.xlabel("Tau21")
+plt.ylabel("normalized")
+plt.savefig("Tau21.pdf")
+############################
+plt.figure(figsize=(5,5))
+plt.hist(PrunMass, bins=10, normed=1, histtype='bar',  fill=False, color= 'k', edgecolor='k', lw = 4)
+plt.legend(loc='upper right')
+plt.title(" jet collections" )
+plt.xlabel("PrunMass")
+plt.ylabel("normalized")
+plt.savefig("PrunMass.pdf")
+############################
+plt.figure(figsize=(5,5))
+plt.hist(leadSD_subjet_pt, bins=10, normed=1, histtype='bar',  fill=False, color= 'k', edgecolor='k', lw = 4)
+plt.legend(loc='upper right')
+plt.title(" jet collections" )
+plt.xlabel("leadSD_subjet_pt")
+plt.ylabel("normalized")
+plt.savefig("leadSD_subjet_pt.pdf")
 #########################
 # output the efficiencies # see DiHiggs project for template
 #########################
