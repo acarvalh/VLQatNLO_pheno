@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# cd ../Delphes/CMSSW_7_6_1/src/ ; cmsenv ; cd -
+## or the cmssw you had used to install delphes
 # to run: ./analysis_gen.py mass_to_cut sample.root
 import os, sys, time,math
 import ROOT
@@ -11,6 +13,12 @@ import bisect
 from optparse import OptionParser
 import matplotlib
 import matplotlib.pyplot as plt
+import pandas
+#from root_pandas import read_root
+
+import root_numpy
+from root_numpy import root2array, rec2array, array2root, tree2array
+
 # Delphes headers
 ROOT.gInterpreter.Declare('#include "external/ExRootAnalysis/ExRootTreeReader.h"')
 ROOT.gInterpreter.Declare('#include "DelphesClasses.h"')
@@ -89,18 +97,32 @@ bjetpt = 30
 #########################
 # categorization
 #########################
-nFatJets = []
-nBs = []
-nJets = []
-nBsFat = []
-Weights  = []
 
-Tau21 = []
-PrunMass = []
-leadSD_subjet_pt = []
-FatMass = []
-WeightsFatLoop  = []
 
+tree_name = "tree"
+
+tuple = ROOT.TTree(tree_name, tree_name)
+br_nFatJets = array('i', [0])
+br_nBs = array('i', [0])
+br_nJets = array('i', [0])
+br_nBsFat = array('i', [0])
+br_Weights  = array('d', [0.])
+br_Tau21 = array('d', [0.])
+br_PrunMass = array('d', [0.])
+br_leadSD_subjet_pt = array('d', [0.])
+br_FatMass = array('d', [0.])
+br_WeightsFatLoop  = array('d', [0.])
+
+tuple.Branch('nFatJets', br_nFatJets, 'nFatJets/I')
+tuple.Branch('nBs', br_nBs, 'nBs/I')
+tuple.Branch('nJets', br_nJets, 'nJets/I')
+tuple.Branch('nBsFat', br_nBsFat, 'nBsFat/I')
+tuple.Branch('Weights', br_Weights, 'Weights/D')
+tuple.Branch('Tau21', br_Tau21, 'Tau21/D')
+tuple.Branch('PrunMass', br_PrunMass, 'PrunMass/D')
+tuple.Branch('leadSD_subjet_pt', br_leadSD_subjet_pt, 'leadSD_subjet_pt/D')
+tuple.Branch('FatMass', br_FatMass, 'FatMass/D')
+tuple.Branch('WeightsFatLoop', br_WeightsFatLoop, 'WeightsFatLoop/D')
 
 def isbtagged(jets, GenB) :
     #print "calculate DR"
@@ -117,11 +139,22 @@ sign = lambda a: 1 if a>0 else -1 if a<0 else 0
 #############################################################
 # Loop over file list
 #############################################################
-onlyCount = True
+onlyCount = False
+nFatJets = 0
+nJets = 0
+nBs = 0
+nBsFat = 0
+PrunMass = -10.
+FatMass = -10.
+leadSD_subjet_pt = -10.
+WeightsFatLoop = -10.
+Weights = 1
+Tau21 = -1.
 for sample in toProcess :
     #for i in range(0,1) :
     #sample = "/eos/user/a/acarvalh/VLQNLO/QCD_HT2000toInf_1.root"
     print sample
+
     chain = ROOT.TChain("Delphes")
     #chain.Add(str(inputpath)+str(inputFile))
     try: chain.Add(sample)
@@ -161,7 +194,7 @@ for sample in toProcess :
             #    weight = weight*sign(branchEvent.At(0).Weight)
             #    negative+=1
             #else : print "Weight "+str(branchEvent.At(0).Weight)
-            Weights.append(sign(branchEvent.At(0).Weight))
+            Weights = sign(branchEvent.At(0).Weight)
             #####################
             # Gen-level particles
             #####################
@@ -220,14 +253,13 @@ for sample in toProcess :
                        #print (isbtagged(dumb, GenBs), jet.BTagAlgo , jet.NSubJetsPruned)
                        #print (jet.Tau[1]/jet.Tau[0] , jet.SoftDroppedSubJet1.M())
                        #print "fatjet "+" "+str(dumb.Pt())
-                       if jet.Tau[0] > 0 : Tau21.append(jet.Tau[1]/jet.Tau[0])
-                       else : Tau21.append(-1.)
+                       if jet.Tau[0] > 0 : Tau21 = jet.Tau[1]/jet.Tau[0]
                        #prumass = jet.SoftDroppedJet.M() # (jet.PrunedP4[1]+jet.PrunedP4[0]).M()
                        #print (jet.SoftDroppedJet.M())
-                       PrunMass.append(jet.SoftDroppedJet.M())
-                       FatMass.append(jet.Mass)
-                       leadSD_subjet_pt.append(jet.SoftDroppedSubJet1.Pt())
-                       WeightsFatLoop.append(sign(branchEvent.At(0).Weight))
+                       PrunMass = jet.SoftDroppedJet.M()
+                       FatMass = jet.Mass
+                       leadSD_subjet_pt = jet.SoftDroppedSubJet1.Pt()
+                       WeightsFatLoop = sign(branchEvent.At(0).Weight)
                        # GenJetAK8.SoftDroppedP4[5]
                        # GenJetAK8.Tau[5]
                        # GenJetAK8.SoftDroppedJet
@@ -247,23 +279,45 @@ for sample in toProcess :
                    dumb = ROOT.TLorentzVector()
                    dumb.SetPtEtaPhiM(jet.PT,jet.Eta,jet.Phi,jet.Mass)
                    RecoJets.append(dumb)
-                   RecoBJets.append(isbtagged(dumb, GenBs)) #
+                   RecoBJets.append(isbtagged(dumb, GenBs))
                    ## using the DR with the genParticles to find out if there is a b-quark
             #print "size of FatJet collection " + str(len(RecoFatJets)) + " size of Jet collection " + str(len(RecoJets))
             numbb = 0
             for i in range(0, len(RecoBJets)) : numbb += RecoBJets[i];
             numfatbb = 0
             for i in range(0, len(RecoBFatJets)) : numfatbb += RecoBFatJets[i];
-            #print " total "+str(numbb)
-            nFatJets.append(len(RecoFatJets))
-            nJets.append(len(RecoJets))
-            nBs.append(numbb)
-            nBsFat.append(numbb)
-    if not onlyCount : print "Sample had "+str(len(filter(lambda x: x < 0, Weights)))+" negative weight events (total "+str(len(filter(lambda x: x > 0, Weights))+len(filter(lambda x: x < 0, Weights)))+")"
-if not onlyCount : print "Total had "+str(len(filter(lambda x: x < 0, Weights)))+" negative weight events (total "+str(len(filter(lambda x: x > 0, Weights))+len(filter(lambda x: x < 0, Weights)))+")"
+            nFatJets = len(RecoFatJets)
+            nJets = len(RecoJets)
+            nBs = numbb
+            nBsFat = numfatbb
+            #######################
+            br_nFatJets[0] = int(nFatJets)
+            br_nJets[0] = int(nJets)
+            br_nBs[0] = int(nBs)
+            br_nBsFat[0] = int(nBsFat)
+            br_PrunMass[0] = float(PrunMass)
+            br_FatMass[0] = float(FatMass)
+            br_leadSD_subjet_pt[0] = float(leadSD_subjet_pt)
+            br_WeightsFatLoop[0] = float(WeightsFatLoop)
+            br_Weights[0] = float(Weights)
+            br_Tau21[0] = float(Tau21)
+            tuple.Fill()
+    #if not onlyCount : print "Sample had "+str(len(filter(lambda x: x < 0, Weights)))+" negative weight events (total "+str(len(filter(lambda x: x > 0, Weights))+len(filter(lambda x: x < 0, Weights)))+")"
+#if not onlyCount : print "Total had "+str(len(filter(lambda x: x < 0, Weights)))+" negative weight events (total "+str(len(filter(lambda x: x > 0, Weights))+len(filter(lambda x: x < 0, Weights)))+")"
 print nevHTparts
 print nfilesHTparts
 #########################
+
+out_file = ROOT.TFile("teste.root", 'RECREATE')
+out_file.WriteTObject(tuple, tuple.GetName(), 'Overwrite')
+out_file.Close()
+
+#dataAll = pandas.DataFrame() # columns = ["nFatJets" : []]
+#dataAll["nFatJets"] = nFatJets
+#dataAll.to_root('teste.root')
+#array2root(np.array(nFatJets, dtype=np.float32), 'test.root', mode='recreate')
+#root2array('test.root')
+"""
 if not onlyCount :
     print "Plotting test histograms"
     plt.figure(figsize=(5,5))
@@ -311,3 +365,4 @@ if not onlyCount :
     #########################
     # output the efficiencies # see DiHiggs project for template
     #########################
+"""
