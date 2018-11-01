@@ -89,16 +89,17 @@ def analyze(fname, maxEvents=-1):
   h_cutflow.GetXaxis().SetBinLabel(4, "p_{T}(1st b jet)>200")
   h_cutflow.GetXaxis().SetBinLabel(5, "Fwd jet")
 
-  h_T_mass = ROOT.TH1D("h_T_mass", ";M(T);Events/100 GeV;",20, 1000, 3000)
-  h_wjets_pt        = ROOT.TH1D("h_wjets_pt", ";p_{T}(W jets);Events/50 GeV;",20, 200., 1200.)
-  h_wjet1_pt        = ROOT.TH1D("h_wjet1_pt", ";p_{T}(leading-p_{T} W jet);Events/50 GeV;",20, 200., 1200.)
-  h_bjets_pt        = ROOT.TH1D("h_bjets_pt", ";p_{T}(b jets);Events/50 GeV;",24, 0., 1200.)
-  h_bjet1_pt        = ROOT.TH1D("h_bjet1_pt", ";p_{T}(leading-p_{T} b jet);Events/50 GeV;",24, 0., 1200.)
-  h_bjet1_fl        = ROOT.TH1D("h_bjet1_fl", ";Leading-p_{T} b jet flavour;Events/1 unit;",3,-0.5,5.5)
-  h_nwjets          = ROOT.TH1D("h_nwjets",   ";Number of W jets;Events/ 1 unit;", 6, -0.5, 5.5)
-  h_nbjets          = ROOT.TH1D("h_nbjets",   ";Number of b jets;Events/ 1 unit;", 6, -0.5, 5.5)
-  h_forwardjet_pt  = ROOT.TH1D("h_forwardjet_pt", ";p_{T}(forward jet);Events/10 GeV;",20, 0., 200.)
-  h_forwardjet_eta = ROOT.TH1D("h_forwardjet_eta", ";#eta(forward jet);Events/ 0.2 units;",50, -5, 5)
+  h_HT              = ROOT.TH1D("h_HT"            , ";H_{T};Events/100 GeV;",20, 1000, 3000)
+  h_T_mass          = ROOT.TH1D("h_T_mass"        , ";M(T);Events/100 GeV;",20, 1000, 3000)
+  h_wjets_pt        = ROOT.TH1D("h_wjets_pt"      , ";p_{T}(W jets);Events/50 GeV;",20, 200., 1200.)
+  h_wjet1_pt        = ROOT.TH1D("h_wjet1_pt"      , ";p_{T}(leading-p_{T} W jet);Events/50 GeV;",20, 200., 1200.)
+  h_bjets_pt        = ROOT.TH1D("h_bjets_pt"      , ";p_{T}(b jets);Events/50 GeV;",24, 0., 1200.)
+  h_bjet1_pt        = ROOT.TH1D("h_bjet1_pt"      , ";p_{T}(leading-p_{T} b jet);Events/50 GeV;",24, 0., 1200.)
+  h_bjet1_fl        = ROOT.TH1D("h_bjet1_fl"      , ";Leading-p_{T} b jet flavour;Events/1 unit;",3,-0.5,5.5)
+  h_nwjets          = ROOT.TH1D("h_nwjets"        , ";Number of W jets;Events/ 1 unit;", 6, -0.5, 5.5)
+  h_nbjets          = ROOT.TH1D("h_nbjets"        , ";Number of b jets;Events/ 1 unit;", 6, -0.5, 5.5)
+  h_forwardjet_pt   = ROOT.TH1D("h_forwardjet_pt" , ";p_{T}(forward jet);Events/10 GeV;",20, 0., 200.)
+  h_forwardjet_eta  = ROOT.TH1D("h_forwardjet_eta", ";#eta(forward jet);Events/ 0.2 units;",50, -5, 5)
 
   if maxEvents == -1:
     toprocess = numberOfEntries
@@ -156,12 +157,14 @@ def analyze(fname, maxEvents=-1):
           h_bjets_pt.Fill(jet.PT)
 
     forwardjets = []
+    HT = 0
     for jet in branchJet:
       if (jet.PT > 20 \
           and abs(jet.Eta) > 1.5 \
           and abs(jet.Eta) < 5 \
           ):
         p4_jet = jet.P4()
+        HT += p4_jet.Pt()
         for wjet in wjets:
           p4_wjet = wjet.P4()
           if p4_jet.DeltaR(p4_wjet) < 1.2: 
@@ -207,6 +210,7 @@ def analyze(fname, maxEvents=-1):
 
     ### Reconstruct T->Wb
     h_T_mass.Fill( (wjets[0].P4() + bjets[0].P4()).Mag() )
+    h_HT.Fill(HT)
 
   fout.Write()
   fout.Close()
