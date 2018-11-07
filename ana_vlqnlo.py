@@ -27,7 +27,13 @@ queue
 
 def Pt(jet): return jet.PT
 
+
+
+
 def Eta(jet): return abs(jet.Eta)
+
+
+
 
 def isBTagged(jet):
   btageff_b = 0.7
@@ -45,6 +51,57 @@ def isBTagged(jet):
   else:
     if random() > btageff_l: return True
     else: return False
+
+
+
+
+def analyze_gen(fname, maxEvents=-1):
+
+  import os
+
+  if fname[0] == "#": return
+
+  import ROOT
+  import numpy as np
+  ROOT.gROOT.SetBatch()
+  print('Analyzing {}'.format(fname))
+
+  ROOT.gInterpreter.Declare('#include "external/ExRootAnalysis/ExRootTreeReader.h"')
+  ROOT.gInterpreter.Declare('#include "DelphesClasses.h"')
+  
+  ROOT.gSystem.Load("libDelphes")
+
+  chain = ROOT.TChain("Delphes")
+  try: chain.Add(fname)
+
+  except IOError as e:
+    print('Couldnt open the file (%s).' % e)
+    return -1
+
+  treeReader = ROOT.ExRootTreeReader(chain)
+  numberOfEntries = treeReader.GetEntries() 
+
+  if DEBUG: print("The tree have {0} from file {1}".format(numberOfEntries, fname))
+
+  branchEvent    = treeReader.UseBranch("Event")
+  branchPart     = treeReader.UseBranch("Particle")
+
+  if maxEvents == -1:
+    toprocess = numberOfEntries
+  else:
+    toprocess = maxEvents
+
+  wtfile = open('/eos/cms/store/user/acarvalh/VLQNLO_files/withPDFunc/Results_20181106/Results_T_L_Qjq_4FNS_NLO_muonsWZHdecay/Events/ASCII/T_W_W_4FNS_Qjq_L_muonsWZHdecay_M1200GeV_Kprod0.1_Kdecay0.1_LHCEnergy13TeV_systematics.dat', 'read')
+  wtlines = wtfile.readlines()
+
+  for event in range(0, toprocess): #
+    treeReader.ReadEntry(event)
+    for part in branchPart:
+      print('part id = {}'.format(part.PID))
+      wts = wtlines[event+1]
+      print(len(wts))
+
+
 
 
 def analyze(fname, maxEvents=-1):
@@ -106,8 +163,19 @@ def analyze(fname, maxEvents=-1):
   else:
     toprocess = maxEvents
 
+  wtfile = open(fname.replace('root', 'dat').replace('Events', 'Events/ASCII')\
+      .replace('_pythia8_events', '_systematics'), \
+      'read')
+  wtlines = wtfile.readlines()
+
   for event in range(0, toprocess): #
     treeReader.ReadEntry(event)
+
+    wts = wtlines[event+1]
+    wts = wts.split()
+    print(len(wts))
+    wt_scaleDouble = wts[4]
+    wt_scaleHalf = wts[8]
 
     h_cutflow.Fill(0)
 
@@ -216,6 +284,8 @@ def analyze(fname, maxEvents=-1):
   fout.Close()
     
     
+    
+    
 def submit(sample, files,  maxEvents, queue):
   import os, re
 
@@ -256,10 +326,18 @@ def submit(sample, files,  maxEvents, queue):
     os.system(cmd)
 
 
+
+
 def main():
 
   from argparse import ArgumentParser
   parser = ArgumentParser(description="Do -h to see usage")
+
+  parser.add_argument("-g", "--analyze_gen", 
+      dest="analyze_gen", 
+      action="store_true", 
+      help="Process only GEN info")
+  
   parser.add_argument("-b", "--batch", 
       dest="batch", 
       action="store_true", 
@@ -299,7 +377,12 @@ def main():
         print(sample)
         submit(sample, samples[sample]["files"], args.maxEvents, args.queue)
   else: 
-    analyze(args.infile, args.maxEvents)
+    if args.analyze_gen == True:
+      analyze_gen(args.infile, args.maxEvents)
+    else:
+      analyze(args.infile, args.maxEvents)
+
+
 
 
 if __name__ == "__main__":
