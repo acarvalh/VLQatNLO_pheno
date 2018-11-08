@@ -42,7 +42,7 @@ def isBTagged(jet):
 
   from random import random
 
-  if jet.Flavor == 5: 
+  if jet.Flavor == 5:
     if random() > btageff_b: return True
     else: return False
   elif jet.Flavor == 4:
@@ -68,7 +68,7 @@ def analyze_gen(fname, maxEvents=-1):
 
   ROOT.gInterpreter.Declare('#include "external/ExRootAnalysis/ExRootTreeReader.h"')
   ROOT.gInterpreter.Declare('#include "DelphesClasses.h"')
-  
+
   ROOT.gSystem.Load("libDelphes")
 
   chain = ROOT.TChain("Delphes")
@@ -79,7 +79,7 @@ def analyze_gen(fname, maxEvents=-1):
     return -1
 
   treeReader = ROOT.ExRootTreeReader(chain)
-  numberOfEntries = treeReader.GetEntries() 
+  numberOfEntries = treeReader.GetEntries()
 
   if DEBUG: print("The tree have {0} from file {1}".format(numberOfEntries, fname))
 
@@ -99,7 +99,7 @@ def analyze_gen(fname, maxEvents=-1):
     for part in branchPart:
       print('part id = {}'.format(part.PID))
       wts = wtlines[event+1]
-      print(len(wts))
+      #print(len(wts))
 
 
 
@@ -117,7 +117,7 @@ def analyze(fname, maxEvents=-1):
 
   ROOT.gInterpreter.Declare('#include "external/ExRootAnalysis/ExRootTreeReader.h"')
   ROOT.gInterpreter.Declare('#include "DelphesClasses.h"')
-  
+
   ROOT.gSystem.Load("libDelphes")
 
   chain = ROOT.TChain("Delphes")
@@ -127,7 +127,7 @@ def analyze(fname, maxEvents=-1):
     return -1
 
   treeReader = ROOT.ExRootTreeReader(chain)
-  numberOfEntries = treeReader.GetEntries() 
+  numberOfEntries = treeReader.GetEntries()
   if DEBUG: print("The tree have {0} from file {1}".format(numberOfEntries, fname))
 
   branchEvent    = treeReader.UseBranch("Event")
@@ -157,6 +157,8 @@ def analyze(fname, maxEvents=-1):
   h_nbjets          = ROOT.TH1D("h_nbjets"        , ";Number of b jets;Events/ 1 unit;", 6, -0.5, 5.5)
   h_forwardjet_pt   = ROOT.TH1D("h_forwardjet_pt" , ";p_{T}(forward jet);Events/10 GeV;",20, 0., 200.)
   h_forwardjet_eta  = ROOT.TH1D("h_forwardjet_eta", ";#eta(forward jet);Events/ 0.2 units;",50, -5, 5)
+  h_mu_pt   = ROOT.TH1D("h_mu_pt" , ";p_{T}(mu);Events/10 GeV;",20, 0., 200.)
+  h_mu_eta  = ROOT.TH1D("h_mu_eta", ";#eta(mu);Events/ 0.2 units;",50, -5, 5)
 
   if maxEvents == -1:
     toprocess = numberOfEntries
@@ -168,16 +170,33 @@ def analyze(fname, maxEvents=-1):
       'read')
   wtlines = wtfile.readlines()
 
-  for event in range(0, toprocess): #
+  for event in range(0, toprocess):
+    #print ("=================")
+    #if event > 100 : break
     treeReader.ReadEntry(event)
 
     wts = wtlines[event+1]
     wts = wts.split()
-    print(len(wts))
+    #print(len(wts))
     wt_scaleDouble = wts[4]
     wt_scaleHalf = wts[8]
 
     h_cutflow.Fill(0)
+
+    ### muons
+    muons = []
+    for part in range(0, branchParticle.GetEntries()):
+       genparticle =  branchParticle.At(part)
+       pdgCode = genparticle.PID
+       #print pdgCode
+       IsPU = genparticle.IsPU
+       status = genparticle.M1
+       #########################
+       if IsPU == 0 and (abs(pdgCode) == 13) and genparticle.Status == 23  :
+           #print (event, pdgCode, genparticle.Status)
+           if ( genparticle.PT > 25 and abs(genparticle.Eta) < 2.5 ) : muons.append(genparticle)
+       #if IsPU == 0 and (abs(pdgCode) == 14) and genparticle.Status == 23  :
+       #     print (event, pdgCode, genparticle.Status)
 
     ### W jets
     wjets = []
@@ -200,27 +219,31 @@ def analyze(fname, maxEvents=-1):
         p4_jet = jet.P4()
         for wjet in wjets:
           p4_wjet = wjet.P4()
-          if p4_jet.DeltaR(p4_wjet) < 1.2: 
+          if p4_jet.DeltaR(p4_wjet) < 1.2:
             continue
+        for muon in muons :
+            p4_muon = muon.P4()
+            if p4_jet.DeltaR(p4_muon) < 0.4:
+              continue
         jet.Flavor = 0
         for genparticle in branchParticle:
-          ### Match to B 
+          ### Match to B
           if genparticle.PID//100%10 == 5 or \
               genparticle.PID//1000%10 == 5 :
                 p4_b = genparticle.P4()
-                if p4_jet.DeltaR(p4_b) < 0.4: 
-                  jet.Flavor = 5 
+                if p4_jet.DeltaR(p4_b) < 0.4:
+                  jet.Flavor = 5
                   break
-          ### Match to D 
+          ### Match to D
           if genparticle.PID//100%10 == 4 or \
               genparticle.PID//1000%10 == 4 :
                 p4_c = genparticle.P4()
-                if p4_jet.DeltaR(p4_c) < 0.4: 
-                  jet.Flavor = 4 
+                if p4_jet.DeltaR(p4_c) < 0.4:
+                  jet.Flavor = 4
                   break
         if DEBUG: print("jet flavor = {}".format(jet.Flavor))
         ### Do b-tagging
-        if isBTagged(jet): 
+        if isBTagged(jet):
           bjets.append(jet)
           h_bjets_pt.Fill(jet.PT)
 
@@ -235,11 +258,11 @@ def analyze(fname, maxEvents=-1):
         HT += p4_jet.Pt()
         for wjet in wjets:
           p4_wjet = wjet.P4()
-          if p4_jet.DeltaR(p4_wjet) < 1.2: 
+          if p4_jet.DeltaR(p4_wjet) < 1.2:
             continue
         for bjet in bjets:
           p4_bjet = bjet.P4()
-          if p4_jet.DeltaR(p4_bjet) < 0.8: 
+          if p4_jet.DeltaR(p4_bjet) < 0.8:
             continue
           forwardjets.append(jet)
 
@@ -280,12 +303,17 @@ def analyze(fname, maxEvents=-1):
     h_T_mass.Fill( (wjets[0].P4() + bjets[0].P4()).Mag() )
     h_HT.Fill(HT)
 
+    if len(muons) :
+        h_mu_pt.Fill(muons[0].PT)
+        h_mu_eta.Fill(muons[0].Eta)
+    print (event, len(muons), len(forwardjets), len(bjets))
+
   fout.Write()
   fout.Close()
-    
-    
-    
-    
+
+
+
+
 def submit(sample, files,  maxEvents, queue):
   import os, re
 
@@ -311,7 +339,7 @@ def submit(sample, files,  maxEvents, queue):
 
     condor_script = open(os.path.join(workdir,'input', os.path.basename(f.replace('.root', '.condor'))), 'w')
     condor_script_content = re.sub('EXEC', os.path.join(workdir,'input', os.path.basename(f.replace('.root', '.sh'))), condor_template)
-    try: 
+    try:
       jobnum = f.rstrip('root').split('_')[-1]
     except:
       jobnum = ''
@@ -333,36 +361,36 @@ def main():
   from argparse import ArgumentParser
   parser = ArgumentParser(description="Do -h to see usage")
 
-  parser.add_argument("-g", "--analyze_gen", 
-      dest="analyze_gen", 
-      action="store_true", 
+  parser.add_argument("-g", "--analyze_gen",
+      dest="analyze_gen",
+      action="store_true",
       help="Process only GEN info")
-  
-  parser.add_argument("-b", "--batch", 
-      dest="batch", 
-      action="store_true", 
+
+  parser.add_argument("-b", "--batch",
+      dest="batch",
+      action="store_true",
       help="Process files in batch mode")
-  
-  parser.add_argument("-q", "--queue", 
-      dest="queue", 
-      action="store", 
+
+  parser.add_argument("-q", "--queue",
+      dest="queue",
+      action="store",
       default="longlunch",
       help="Condor job flavours")
-  
-  parser.add_argument("-f", "--file", 
-      dest="infile", 
-      action="store", 
-      default="filestoprocess.txt", 
+
+  parser.add_argument("-f", "--file",
+      dest="infile",
+      action="store",
+      default="filestoprocess.txt",
       type=str,
       help="Name of text file containing names of ROOT files to process")
-  
-  parser.add_argument("-n", "--maxEvents", 
-      dest="maxEvents", 
-      action="store", 
-      default=-1, 
-      type=int, 
+
+  parser.add_argument("-n", "--maxEvents",
+      dest="maxEvents",
+      action="store",
+      default=-1,
+      type=int,
       help="Maximum number of events to process")
-  
+
   args = parser.parse_args()
 
   print(args)
@@ -371,12 +399,12 @@ def main():
     print("Setting to batch mode")
     import json
     import functools
-    with open(args.infile, 'r') as infile: 
+    with open(args.infile, 'r') as infile:
       samples = json.load(infile)
       for sample in samples:
         print(sample)
         submit(sample, samples[sample]["files"], args.maxEvents, args.queue)
-  else: 
+  else:
     if args.analyze_gen == True:
       analyze_gen(args.infile, args.maxEvents)
     else:
