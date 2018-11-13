@@ -172,7 +172,7 @@ def analyze(fname, maxEvents=-1):
 
   for event in range(0, toprocess):
     #print ("=================")
-    #if event > 100 : break
+    if event > 100 : break
     treeReader.ReadEntry(event)
 
     wts = wtlines[event+1]
@@ -185,18 +185,17 @@ def analyze(fname, maxEvents=-1):
 
     ### muons
     muons = []
+    #electrons = []
     for part in range(0, branchParticle.GetEntries()):
        genparticle =  branchParticle.At(part)
-       pdgCode = genparticle.PID
-       #print pdgCode
-       IsPU = genparticle.IsPU
-       status = genparticle.M1
+       #status = genparticle.M1
        #########################
-       if IsPU == 0 and (abs(pdgCode) == 13) and genparticle.Status == 23  :
-           #print (event, pdgCode, genparticle.Status)
+       if genparticle.IsPU == 0 and (abs(genparticle.PID) == 13) and genparticle.Status == 1 : #
+           # print (event, genparticle.PID, genparticle.Status, genparticle.M1)
            if ( genparticle.PT > 25 and abs(genparticle.Eta) < 2.5 ) : muons.append(genparticle)
-       #if IsPU == 0 and (abs(pdgCode) == 14) and genparticle.Status == 23  :
+       #if genparticle.IsPU == 0 and (abs(genparticle.PID) == 11) and genparticle.Status == 23  :
        #     print (event, pdgCode, genparticle.Status)
+       #     if ( genparticle.PT > 25 and abs(genparticle.Eta) < 2.5 ) : electrons.append(genparticle)
 
     ### W jets
     wjets = []
