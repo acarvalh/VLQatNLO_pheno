@@ -153,7 +153,7 @@ def analyze(fname, wtfilename="", maxEvents=-1):
 
   for event in range(0, toprocess):
     #print ("=================")
-    #if event > 100 : break
+    if event > 100 : break
     treeReader.ReadEntry(event)
 
     wts = wtlines[event+1]
