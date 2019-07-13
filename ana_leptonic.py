@@ -4,15 +4,15 @@ from __future__ import print_function
 help = '''
 
 Print help:
-  python ana_vlqnlo.py
+  python ana_leptonic.py.py
 
 For interactive jobs:
 
-  python ana_vlqnlo.py -f /path/to/delphes/tree.root -w /path/to/pdf_scale_weights.txt -n NumberOfEvents
+  python ana_leptonic.py.py -f /path/to/delphes/tree.root -w /path/to/pdf_scale_weights.txt -n NumberOfEvents
 
 For batch submission:
 
-  python ana_vlqnlo.py -f /path/to/filenames.txt 
+  python ana_leptonic.py.py -f /path/to/filenames.txt 
 '''
 
 DEBUG = False
@@ -23,7 +23,7 @@ cd RUNDIR
 source /afs/cern.ch/work/d/dm2/Analysis/VLQNLOPheno/VLQatNLO_pheno/setup.bash
 cd RUNDIR
 
-python /afs/cern.ch/work/d/dm2/Analysis/VLQNLOPheno/VLQatNLO_pheno/ana_vlqnlo.py -f FNAME -w WTNAME
+python /afs/cern.ch/work/d/dm2/Analysis/VLQNLOPheno/VLQatNLO_pheno/ana_leptonic.py.py -f FNAME -w WTNAME
 
 #find -type l -delete
 
@@ -142,26 +142,26 @@ def analyze(fname, wtfilename="", maxEvents=-1):
   else:
     toprocess = maxEvents
 
-  if wtfilename == "":
-    wtfile = open(fname.replace('root', 'dat').replace('Events', 'Events/ASCII')\
-        .replace('_pythia8_events', '_systematics'), \
-        'read')
-  else:
-    wtfile = open(wtfilename,
-        'read')
-  wtlines = wtfile.readlines()
+  #if wtfilename == "":
+  #  wtfile = open(fname.replace('root', 'dat').replace('Events', 'Events/ASCII')\
+  #      .replace('_pythia8_events', '_systematics'), \
+  #      'read')
+  #else:
+  #  wtfile = open(wtfilename,
+  #      'read')
+  #wtlines = wtfile.readlines()
 
   for event in range(0, toprocess):
     #print ("=================")
     if event > 100 : break
     treeReader.ReadEntry(event)
 
-    wts = wtlines[event+1]
-    wts = wts.split()
-    #print(len(wts))
-    wt = float(wts[9])
-    wt_scaleHi = float(wts[4])/wt
-    wt_scaleLo = float(wts[8])/wt
+    #wts = wtlines[event+1]
+    #wts = wts.split()
+    ##print(len(wts))
+    #wt = float(wts[9])
+    #wt_scaleHi = float(wts[4])/wt
+    #wt_scaleLo = float(wts[8])/wt
 
     h_cutflow.Fill(0)
 
@@ -315,13 +315,13 @@ def analyze(fname, wtfilename="", maxEvents=-1):
     h_ST    .Fill(ST)
     h_T_mass.Fill(Minv)
 
-    h_HT_scaleHi    .Fill(HT  , wt_scaleHi)
-    h_ST_scaleHi    .Fill(ST  , wt_scaleHi)
-    h_T_mass_scaleHi.Fill(Minv, wt_scaleHi)
+    #h_HT_scaleHi    .Fill(HT  , wt_scaleHi)
+    #h_ST_scaleHi    .Fill(ST  , wt_scaleHi)
+    #h_T_mass_scaleHi.Fill(Minv, wt_scaleHi)
 
-    h_HT_scaleLo    .Fill(HT  , wt_scaleLo)
-    h_ST_scaleLo    .Fill(ST  , wt_scaleLo)
-    h_T_mass_scaleLo.Fill(Minv, wt_scaleLo)
+    #h_HT_scaleLo    .Fill(HT  , wt_scaleLo)
+    #h_ST_scaleLo    .Fill(ST  , wt_scaleLo)
+    #h_T_mass_scaleLo.Fill(Minv, wt_scaleLo)
 
   fout.Write()
   fout.Close()
@@ -368,7 +368,7 @@ def submit(sample, files, wtfiles, maxEvents, queue):
 
     cmd = ' '.join(['condor_submit',  os.path.join(workdir,'input', os.path.basename(f.replace('.root', '.condor')))])
     print(cmd)
-    os.system(cmd)
+    #os.system(cmd)
 
 
 

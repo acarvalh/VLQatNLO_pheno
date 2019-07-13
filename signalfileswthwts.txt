@@ -1,0 +1,40 @@
+{
+  "T_L_Qjq_4FNS_LO_muonsWZHdecay_M1200GeV": {
+    "xsec": "1.",
+      "files": [
+        "/eos/cms/store/user/acarvalh/VLQNLO_files/withPDFunc/Results_20181106/Results_T_L_Qjq_4FNS_LO_muonsWZHdecay/Events/T_W_W_4FNS_Qjq_L_muonsWZHdecay_M1200GeV_Kprod0.1_Kdecay0.1_LHCEnergy13TeV_pythia8_events.root"
+      ],
+      "wtfiles": [
+        "/eos/cms/store/user/acarvalh/VLQNLO_files/withPDFunc/Results_20181106/Results_T_L_Qjq_4FNS_LO_muonsWZHdecay/Events/ASCII/T_W_W_4FNS_Qjq_L_muonsWZHdecay_M1200GeV_Kprod0.1_Kdecay0.1_LHCEnergy13TeV_systematics.dat"
+      ]
+  },
+
+    "T_L_Qjq_4FNS_NLO_muonsWZHdecay_M1200GeV": {
+      "xsec": "1.",
+      "files": [
+        "/eos/cms/store/user/acarvalh/VLQNLO_files/withPDFunc/Results_20181106/Results_T_L_Qjq_4FNS_NLO_muonsWZHdecay/Events/events_PYTHIA8_0.root"
+      ],
+      "wtfiles": ["/eos/cms/store/user/acarvalh/VLQNLO_files/withPDFunc/Results_20181106/Results_T_L_Qjq_4FNS_NLO_muonsWZHdecay/Events/ASCII/T_W_W_4FNS_Qjq_L_muonsWZHdecay_M1200GeV_Kprod0.1_Kdecay0.1_LHCEnergy13TeV_systematics.dat"]
+    },
+
+    "T_L_Qj_5FNS_LO_muonsWZHdecay_M1200GeV": {
+      "xsec": "1.",
+      "files": [
+        "/eos/cms/store/user/acarvalh/VLQNLO_files/withPDFunc/Results_20181106/Results_T_L_Qj_5FNS_LO_muonsWZHdecay/Events/T_W_W_5FNS_Qj_L_muonsWZHdecay_M1200GeV_Kprod0.1_Kdecay0.1_LHCEnergy13TeV_pythia8_events.root"
+      ],
+      "wtfiles": [
+        "/eos/cms/store/user/acarvalh/VLQNLO_files/withPDFunc/Results_20181106/Results_T_L_Qj_5FNS_LO_muonsWZHdecay/Events/ASCII/T_W_W_5FNS_Qj_L_muonsWZHdecay_M1200GeV_Kprod0.1_Kdecay0.1_LHCEnergy13TeV_systematics.dat"
+      ]
+    },
+
+    "T_L_Qj_5FNS_NLO_muonsWZHdecay_M1200GeV": {
+      "xsec": "1.",
+      "files": [
+        "/eos/cms/store/user/acarvalh/VLQNLO_files/withPDFunc/Results_20181106/Results_T_L_Qj_5FNS_NLO_muonsWZHdecay/Events/events_PYTHIA8_0.root"
+      ],
+      "wtfiles": [
+        "/eos/cms/store/user/acarvalh/VLQNLO_files/withPDFunc/Results_20181106/Results_T_L_Qj_5FNS_NLO_muonsWZHdecay/Events/ASCII/T_W_W_5FNS_Qj_L_muonsWZHdecay_M1200GeV_Kprod0.1_Kdecay0.1_LHCEnergy13TeV_systematics.dat"
+      ]
+    }
+
+}
