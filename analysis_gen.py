@@ -41,7 +41,7 @@ inputFile = sys.argv[2]
 VLQmass = float(sys.argv[1])
 order = "LO"
 
-inputpath="/eos/user/a/acarvalh/VLQNLO_files/"
+inputpath="/eos/cms/store/user/acarvalh/VLQNLO_files/"
 
 cx=1.0
 nev=1.0
@@ -79,9 +79,9 @@ toProcess = [str(inputpath)+str(inputFile)]
 if ".root" not in inputFile :
     toProcess = glob.glob(inputpath+'/QCD_*.root')
 
-file = open('/eos/user/a/acarvalh/VLQNLO_files/samplesList.txt',"w")
-file.write(str(glob.glob(inputpath+'/*.root')))
-file.close()
+#file = open('/eos/user/a/acarvalh/VLQNLO_files/samplesList.txt',"w")
+#file.write(str(glob.glob(inputpath+'/*.root')))
+#file.close()
 
 #########################
 # Cuts
@@ -186,6 +186,7 @@ for sample in toProcess :
                 weight = float(HTpartstoCX[dictionary])
         for entry in range(0, numberOfEntries): #
             # Load selected branches with data from specified event
+            if entry > 10 : break
             treeReader.ReadEntry(entry)
             #print branchEvent.GetEntries()
             ## check if we have negative weights on the NLO samples, and how to use them
@@ -195,12 +196,14 @@ for sample in toProcess :
             #    negative+=1
             #else : print "Weight "+str(branchEvent.At(0).Weight)
             Weights = sign(branchEvent.At(0).Weight)
+            print ("ScalePDF ", str(branchEvent.At(0).ScalePDF), str(branchEvent.At(0).PDF2), str(branchEvent.At(0).Weight) )
             #####################
             # Gen-level particles
             #####################
             Ws = []
             Topone = []
             GenBs = []
+            GenMus = []
             QQ = True
             #print branchParticle.GetEntries()
             for part in range(0, branchParticle.GetEntries()):
@@ -228,7 +231,7 @@ for sample in toProcess :
                      Topone.append(genparticle) # the LHE information...
                      print "Q decay: "+str(branchParticle.At(genparticle.D1).PID)
                      print "Q decay 2: "+str(branchParticle.At(genparticle.D2).PID)
-               if (IsPU == 0 and (abs(pdgCode) == 5) and abs(branchParticle.At(genparticle.M1).PID ) != 5 ): # > 6000000
+               if (IsPU == 0 and (abs(pdgCode) == 13) and abs(branchParticle.At(genparticle.M1).PID ) != 5 ): # > 6000000
                   if genparticle.PT > 10 :
                       dumb = ROOT.TLorentzVector()
                       dumb.SetPtEtaPhiM(genparticle.PT,genparticle.Eta,genparticle.Phi,genparticle.Mass)
@@ -238,6 +241,11 @@ for sample in toProcess :
                   #mother =  branchParticle.At(genparticle.M1)
                   #motherPID = mother.PID
                   #print " pdgid "+ str(pdgCode)
+               if (IsPU == 0 and (abs(pdgCode) == 5) and abs(branchParticle.At(genparticle.M1).PID ) != 5 ): # > 6000000
+                  if genparticle.PT > 10 :
+                      dumb = ROOT.TLorentzVector()
+                      dumb.SetPtEtaPhiM(genparticle.PT,genparticle.Eta,genparticle.Phi,genparticle.Mass)
+                      GenMus.append(dumb)
             # taking the gen-jets
             RecoFatJets = []
             RecoBFatJets = []
